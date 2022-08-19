@@ -1,19 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ColDef, GridReadyEvent } from 'ag-grid-community';
-
-export interface IOlympicData {
-  athlete: string;
-  age: number;
-  country: string;
-  year: number;
-  date: string;
-  sport: string;
-  gold: number;
-  silver: number;
-  bronze: number;
-  total: number;
-}
+import { ChampionService } from './service/champion.service';
+import { Champion } from './model/champion.model';
+import { Subject, takeUntil } from 'rxjs';
+import { FormControl, FormGroupDirective, NgForm, Validators } from '@angular/forms';
+import { BtnCellRenderer } from '../common/BtnCellRenderer';
 
 @Component({
   selector: 'app-champion',
@@ -24,92 +16,77 @@ export interface IOlympicData {
 
 export class ChampionComponent implements OnInit {
 
-  // public columnDefs: ColDef[] = [
-  //   { field: 'athlete', sort: 'desc' },
-  //   { field: 'age', width: 90 },
-  //   { field: 'country' },
-  //   { field: 'year', width: 90, unSortIcon: true },
-  //   { field: 'date', comparator: dateComparator },
-  //   { field: 'sport' },
-  //   { field: 'gold' },
-  //   { field: 'silver' },
-  //   { field: 'bronze' },
-  //   { field: 'total' },
-  // ];
+  private _unsubscribeAll: Subject<any>;
 
-  // public defaultColDef: ColDef = {
-  //   width: 170,
-  //   sortable: true,
-  // };
-  // public rowData!: IOlympicData[];
-
-  rowData:any;
-
-  constructor(private http: HttpClient) {}
+  champions: Champion[] = [];
+  public paginationPageSize = 20;
+  public cacheBlockSize = 20;
+  api: any;
+  frameworkComponents: any;
 
 
-  onGridReady(params: GridReadyEvent<IOlympicData>) {
-    this.http
-      .get<IOlympicData[]>(
-        'https://www.ag-grid.com/example-assets/olympic-winners.json'
-      )
-      .subscribe((data) => {
-        console.log(data);
-        
-        this.rowData = data
-      });
+
+  rowData: any;
+
+  constructor(
+    private http: HttpClient,
+    private _championService: ChampionService
+  ) {
+    this._unsubscribeAll = new Subject();
+
+    this.frameworkComponents = {
+      buttonRenderer: BtnCellRenderer,
+    }
   }
 
-  columnDefs: ColDef[] = [
-		{headerName: 'ID', field: 'age' },
-		{headerName: 'Title', field: 'athlete' },
-		{headerName: 'Name', field: 'country'},
-    {headerName: 'Key', field: 'gold'}
-	];
 
-	// rowData = [
-	// 	{ id: 'Toyota', title: 'Celica', name: 35000, key: "key data"},
-	// 	{ id: 'Ford', title: 'Mondeo', name: 32000, key: "key data"},
-	// 	{ id: 'Porsche', title: 'Boxster', name: 72000, key: "key data"}
-	// ];
-  
+
+
+  public defaultColDef: ColDef = {
+    sortable: true,
+    resizable: true,
+  };
+
+  columnDefs: ColDef[] = [
+    {
+      headerName: 'ID', field: 'id', checkboxSelection: true,
+      headerCheckboxSelection: true,
+    },
+    { headerName: 'Title', field: 'title' },
+    { headerName: 'Name', field: 'name' },
+    { headerName: 'Key', field: 'key' },
+    {
+      headerName: 'Action',
+      cellRenderer: BtnCellRenderer,
+      cellRendererParams: {
+        onClick: this.delete.bind(this),
+        lable: "Delete"
+      },
+    },
+  ];
 
   ngOnInit(): void {
 
-    
+    this._championService
+      .onChampionChanged
+      .pipe(takeUntil(this._unsubscribeAll))
+      .subscribe((champions: Champion[]) => {
+        // console.log('[champion list]', champions);
+
+        this.champions = champions
+      });
+  }
+
+
+  delete(params: { rowIndex: any; }) {
+    console.log(params);
+
+    //  this.api.startEditingCell({
+    //     rowIndex: params.rowIndex,
+    //     colKey: 'make'
+    //   });
   }
 
 }
 
-function dateComparator(date1: string, date2: string) {
-  const date1Number = monthToComparableNumber(date1);
-  const date2Number = monthToComparableNumber(date2);
-  if (date1Number === null && date2Number === null) {
-    return 0;
-  }
-  if (date1Number === null) {
-    return -1;
-  }
-  if (date2Number === null) {
-    return 1;
-  }
-  return date1Number - date2Number;
-}
-
-function monthToComparableNumber(date: string) {
-  if (date === undefined || date === null || date.length !== 10) {
-    return null;
-  }
-  const yearNumber = Number.parseInt(date.substring(6, 10));
-  const monthNumber = Number.parseInt(date.substring(3, 5));
-  const dayNumber = Number.parseInt(date.substring(0, 2));
-  return yearNumber * 10000 + monthNumber * 100 + dayNumber;
-}
-function fadeInOnEnterAnimation(arg0: { anchor: string; delay: number; duration: number; }): any {
-  throw new Error('Function not implemented.');
-}
-
-function slideOutUpOnLeaveAnimation(arg0: { anchor: string; delay: number; duration: number; }): any {
-  throw new Error('Function not implemented.');
-}
 

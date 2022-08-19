@@ -1,7 +1,30 @@
-<ag-grid-angular 
+
+
+
+<mat-grid-list cols="1">
+
+	<form class="example-form">
+		<mat-form-field class="example-full-width" appearance="fill">
+		  <mat-label>Search</mat-label>
+		  <input matInput>
+		</mat-form-field>
+
+	  </form>
+
+
+</mat-grid-list>
+<mat-grid-list cols="1">
+	<ag-grid-angular 
 	style="width: 100%; height: 800px;" 
 	class="ag-theme-alpine"
-	[rowData]="rowData" 
-    (gridReady)="onGridReady($event)"
-	[columnDefs]="columnDefs">
+	[rowData]="champions"
+	[columnDefs]="columnDefs"
+	[defaultColDef]="defaultColDef"
+	[pagination]="true"
+	[cacheBlockSize]="cacheBlockSize"
+    [paginationPageSize]="paginationPageSize"
+	>
 </ag-grid-angular>
+
+</mat-grid-list>
+

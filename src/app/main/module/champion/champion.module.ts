@@ -5,12 +5,19 @@ import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { AgGridModule } from 'ag-grid-angular';
 import { ChampionComponent } from './champion.component';
-
+import { ChampionService } from './service/champion.service';
+import {MatGridListModule} from '@angular/material/grid-list';
+import {MatFormFieldModule} from '@angular/material/form-field';
+import {MatInputModule} from '@angular/material/input';
+import {MatButtonModule} from '@angular/material/button';
 const routes = [
     {
         path     : '',
-        component: ChampionComponent
-    }
+        component: ChampionComponent,
+        resolve:{
+            champions: ChampionService
+        }
+    },
 ];
 
 @NgModule({
@@ -22,7 +29,14 @@ const routes = [
         AgGridModule,
         HttpClientModule,
         CommonModule,
+        MatGridListModule,
+        MatFormFieldModule,
+        MatInputModule,
+        MatButtonModule
 
+    ],
+    providers:[
+        ChampionService
     ]
 })
 export class ChampionModule
