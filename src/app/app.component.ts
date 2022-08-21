@@ -33,4 +33,11 @@ export class AppComponent implements OnInit {
 
       this._router.navigate(['/champion_2'])
   }
+
+  gotoHome(e: MouseEvent): void
+  {
+      e.preventDefault();
+
+      this._router.navigate(['/'])
+  }
 }

@@ -4,11 +4,8 @@ import { ActivatedRouteSnapshot, Resolve, RouterStateSnapshot } from '@angular/r
 import { Observable, Subject, BehaviorSubject } from 'rxjs';
 import { shareReplay, map, takeUntil, finalize } from 'rxjs/operators';
 import * as _ from 'lodash';
-import { PaginationProp } from 'src/app/shared/interface/pagination';
-import { SortProp } from 'src/app/shared/interface/sort';
 import { AppConst } from 'src/app/shared/AppConst';
 import { Champion } from '../model/champion.model';
-import { __makeTemplateObject } from 'tslib';
 
 @Injectable()
 export class ChampionService implements Resolve<any>
@@ -18,41 +15,17 @@ export class ChampionService implements Resolve<any>
 
     onChampionChanged: BehaviorSubject<any>;
 
-    onPaginationChanged: Subject<PaginationProp>;
     onSearchTextChanged: Subject<any>;
-    onSortChanged: Subject<SortProp>;
-    onTableLoaderChanged: Subject<any>;
-    onFilterChanged: Subject<any>;
-
-    defaultPageIndex: any = 1;
-    defaultPageSize: any = 5;
-    defaultPageSizeOptions: number[] = [5, 10, 20];
-
-    totalRecords: number;
-    totalDisplayRecords: number;
-    isFiltered: boolean;
-    pagination: any | null = null;
-    filterBy: any | null = null;
-    sortBy: any | null = null;
-    searchText: string | null = null;
+    searchText: string = '';
 
     constructor(
         private _httpClient: HttpClient,
-    ) {
+    ) 
+    {
         // Set the defaults
-        this.totalRecords = 0;
-        this.totalDisplayRecords = 0;
-        this.isFiltered = false;
         this.champions = [];
-
         this.onChampionChanged = new BehaviorSubject([]);
-
         this.onSearchTextChanged = new Subject();
-        this.onSortChanged = new Subject();
-        this.onPaginationChanged = new Subject();
-        this.onTableLoaderChanged = new Subject();
-        this.onFilterChanged = new Subject();
-
         this._unsubscribeAll = new Subject();
     }
 
@@ -73,6 +46,14 @@ export class ChampionService implements Resolve<any>
                 this.getChampions()
             ])
                 .then(([champions]: [any]) => {
+
+                    this.onSearchTextChanged
+                        .pipe(takeUntil(this._unsubscribeAll))
+                        .subscribe(searchText => {
+                            this.searchText = searchText;
+                            this.getChampions();
+                        });
+
                     resolve();
                 })
                 .catch(error => {
@@ -84,17 +65,20 @@ export class ChampionService implements Resolve<any>
     getChampions(): Promise<any> {
         return new Promise<void>((resolve, reject) => {
 
+            const params = new HttpParams()
+                .set('search', this.searchText);
+
             this._httpClient
-                .get<any>(`assets/dataset_lolrankedgames/champion_info.json`)
+                .get<any>(`${AppConst.apiBaseUrl}/champion_info.json`, {params })
                 .pipe(
                     map(response => response.data),
                     shareReplay()
                 )
                 .subscribe(
                     (response: any) => {
-                        for (let i = 1; i < Object.keys(response).length - 1; i++) {
 
-                            
+                        //creating iterable array
+                        for (let i = 1; i < Object.keys(response).length - 1; i++) {
 
                             //skip data
                             // if(response[i]=== undefined){
@@ -114,17 +98,48 @@ export class ChampionService implements Resolve<any>
 
                                 this.champions.push(new Champion(data));
                             }
+                        }
 
+                        if(!_.isNull(this.searchText)|| !_.isEmpty(this.searchText)){
+
+                            //  //set column to lowercase for case insensitive search
+                            this.onChampionChanged.next([...this.champions.filter(champion=> champion.name.toLocaleLowerCase().includes(this.searchText)|| champion.title.toLocaleLowerCase().includes(this.searchText)|| champion.key.toLocaleLowerCase().includes(this.searchText))])
+                        }
+                        else{
+
+                            this.onChampionChanged.next([...this.champions]);
 
                         }
                         
-                        this.onChampionChanged.next([...this.champions]);
-
                         resolve();
                     },
                     reject
                 );
         });
+    }
+
+    deleteChampion(index: string): Observable<any>
+    {
+        const params = new HttpParams().set('id', index);
+
+        return this._httpClient
+        // .delete<any>(`assets/dataset_lolrankedgames/champion_info.json`, {params })
+            .get<any>(`${AppConst.apiBaseUrl}/champion_info.json`, {params })
+            .pipe(
+                map(response => 
+                {
+                    this.champions = this.champions.filter((i) => i.id !== index).map((v, i) =>
+                    {
+                        v.index = i;
+                        return v;
+                    });
+
+                    setTimeout(() => this.onChampionChanged.next([...this.champions]), 500);
+
+                    return 'deleted';
+                }),
+                shareReplay()
+            );
     }
 
     unsubscribeOptions(): void {
@@ -135,13 +150,8 @@ export class ChampionService implements Resolve<any>
         this._unsubscribeAll = new Subject();
 
         // reset all variables
-        this.pagination = null;
-        this.filterBy = null;
-        this.sortBy = null;
-        this.searchText = null;
-        this.totalDisplayRecords = 0;
-        this.totalRecords = 0;
-        this.isFiltered = false;
+        this.searchText = '';
+
     }
 
 }

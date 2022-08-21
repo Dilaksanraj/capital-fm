@@ -3,12 +3,12 @@
 
 <mat-grid-list cols="1">
 
-	<form class="example-form">
+	
+	<form class="example-form" style="max-width: 100%;">
 		<mat-form-field class="example-full-width" appearance="fill">
 		  <mat-label>Search</mat-label>
-		  <input matInput>
+		  <input matInput [formControl]="searchInput">
 		</mat-form-field>
-
 	  </form>
 
 

@@ -10,6 +10,12 @@ import {MatGridListModule} from '@angular/material/grid-list';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatInputModule} from '@angular/material/input';
 import {MatButtonModule} from '@angular/material/button';
+import {MatSnackBarModule} from '@angular/material/snack-bar';
+import {MatDialogModule} from '@angular/material/dialog';
+import {MatIconModule} from '@angular/material/icon';
+import { BtnCellRenderer } from '../../common/BtnCellRenderer';
+import { ReactiveFormsModule } from '@angular/forms';
+
 const routes = [
     {
         path     : '',
@@ -22,7 +28,8 @@ const routes = [
 
 @NgModule({
     declarations: [
-        ChampionComponent
+        ChampionComponent,
+        BtnCellRenderer
     ],
     imports: [
         RouterModule.forChild(routes),
@@ -32,7 +39,11 @@ const routes = [
         MatGridListModule,
         MatFormFieldModule,
         MatInputModule,
-        MatButtonModule
+        MatButtonModule,
+        MatSnackBarModule,
+        MatDialogModule,
+        MatIconModule,
+        ReactiveFormsModule,
 
     ],
     providers:[
